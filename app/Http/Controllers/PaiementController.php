@@ -171,29 +171,24 @@ class PaiementController extends Controller
     
     public function show($id)
     {
-        
-        $paiement = Paiement::findOrFail($id);
         $comptes = Compte::all(); 
         $beneficiaires = Beneficiaire::all();
         $paiement = Paiement::findOrFail($id);
-        $taxes = $paiement->taxes;
+        $taxes = Taxe::all();
+        
         $tva = $imf = $pl = $cf = $irf = 0;
 
         foreach ($taxes as $taxe) {
             if ($taxe->nom == 'TVA') {
-                $tva = $tva + $taxe->pourcentage;  
-            }
-            if ($taxe->nom == 'IMF') {
-                $imf = $imf + $taxe->pourcentage;  
-            }
-            if ($taxe->nom == 'PL') {
-                $pl = $pl + $taxe->pourcentage;  
-            }
-            if ($taxe->nom == 'CF') {
-                $cf = $cf + $taxe->pourcentage;  
-            }
-            if ($taxe->nom == 'IRF') {
-                $irf = $irf + $taxe->pourcentage;  
+                $tva = $taxe->pourcentage / 100;
+            } elseif ($taxe->nom == 'IMF') {
+                $imf = $taxe->pourcentage / 100;
+            } elseif ($taxe->nom == 'PL') {
+                $pl = $taxe->pourcentage / 100;
+            } elseif ($taxe->nom == 'CF') {
+                $cf = $taxe->pourcentage / 100;
+            } elseif ($taxe->nom == 'IRF') {
+                $irf = $taxe->pourcentage / 100;
             }
         }
 
@@ -211,7 +206,7 @@ class PaiementController extends Controller
             $section->addText("Titre de paiement Numero:" , null, ['align' => Jc::CENTER]);
 
             $section->addText("Imputation budgetaire: Compte principale ");
-            $section->addText("Bénéficiaire: ");
+            $section->addText("Bénéficiaire: "); 
             $section->addText("Montant: " . $paiement->montant);
             $section->addText("Montant en lettres: " . $this->convertirMontantEnLettres($paiement->montant));
 
@@ -219,14 +214,15 @@ class PaiementController extends Controller
             
             $TCC = $paiement->montant;
             $HT = $TCC/(1 + $tva);
-            $calc_imf = $TCC * ($imf * 100);
             $calc_tva = ($tva * $TCC)/(1 + $tva);
+            $calc_imf = $TCC * $imf ;
+            $net = $TCC - ($tva + $imf);
 
             $section->addText("TVA: " .$calc_tva);
             $section->addText("IMF: " .$calc_imf);
             $section->addText("ITS: ");
             $section->addText("CNAM: ");
-            $section->addText("NET: ");
+            $section->addText("NET: " .$net);
             
             $section->addText("La date: " . $paiement->date_paiement, null, ['align' => Jc::RIGHT]);
             $section->addText("Le Directeur", ['align' => Jc::RIGHT]);
@@ -249,12 +245,12 @@ class PaiementController extends Controller
             $section = $phpWord->addSection();
         
             // Add content to the Word document
-            $section->addText("République Islamique de Mauritanie: " );
-            $section->addText("Honneur-Fraternité-Justice:");
-            $section->addText("MINISTERE DE L'ENSEIGNEMENT SUPERIEUR:");
-            $section->addText("ET DE LA RECHERCHE SCIENTIFIQUE:");
-            $section->addText("INSTITUT SUPERIEUR NUMERIQUE:");
-            $section->addText("Titre de paiement Numero:");
+            $section->addText("République Islamique de Mauritanie:", null, ['align' => Jc::LEFT]);
+            $section->addText("Honneur-Fraternité-Justice:", null, ['align' => Jc::LEFT]);
+            $section->addText("MINISTERE DE L'ENSEIGNEMENT SUPERIEUR:", null, ['align' => Jc::LEFT]);
+            $section->addText("ET DE LA RECHERCHE SCIENTIFIQUE:" , null, ['align' => Jc::LEFT]);
+            $section->addText("INSTITUT SUPERIEUR NUMERIQUE:" , null, ['align' => Jc::LEFT]);
+            $section->addText("Titre de paiement Numero:" , null, ['align' => Jc::CENTER]);
 
             $section->addText("Imputation budgetaire: Compte principale ");
             $section->addText("Bénéficiaire: ");
@@ -263,9 +259,9 @@ class PaiementController extends Controller
 
             $section->addText("Mode de Paiement: " . $paiement->mode_paiement);
 
-            $ttc = $paiement->monatnt;
-            $calc_imf = $ttc * ($imf / 100);
-            $net = $ttc - $imf;
+            $TTC = $paiement->montant;
+            $calc_imf = $TTC * $imf;
+            $net = $TTC - $calc_imf;
 
             $section->addText("TVA: ");
             $section->addText("IMF: " .$calc_imf);
@@ -274,6 +270,8 @@ class PaiementController extends Controller
             $section->addText("NET: " .$net);
             
             $section->addText("La date: " . $paiement->date_paiement);
+            $section->addText("Le Directeur", ['align' => Jc::RIGHT]);
+            $section->addText("Le Comptable", ['align' => Jc::LEFT]);
 
             $fileName = 'paiement_' . $paiement->id . '.docx';
             $filePath = storage_path('app/public/' . $fileName);
@@ -292,12 +290,12 @@ class PaiementController extends Controller
             $section = $phpWord->addSection();
         
             // Add content to the Word document
-            $section->addText("République Islamique de Mauritanie: " );
-            $section->addText("Honneur-Fraternité-Justice:");
-            $section->addText("MINISTERE DE L'ENSEIGNEMENT SUPERIEUR:");
-            $section->addText("ET DE LA RECHERCHE SCIENTIFIQUE:");
-            $section->addText("INSTITUT SUPERIEUR NUMERIQUE:");
-            $section->addText("Titre de paiement Numero:");
+            $section->addText("République Islamique de Mauritanie:", null, ['align' => Jc::LEFT]);
+            $section->addText("Honneur-Fraternité-Justice:", null, ['align' => Jc::LEFT]);
+            $section->addText("MINISTERE DE L'ENSEIGNEMENT SUPERIEUR:", null, ['align' => Jc::LEFT]);
+            $section->addText("ET DE LA RECHERCHE SCIENTIFIQUE:" , null, ['align' => Jc::LEFT]);
+            $section->addText("INSTITUT SUPERIEUR NUMERIQUE:" , null, ['align' => Jc::LEFT]);
+            $section->addText("Titre de paiement Numero:" , null, ['align' => Jc::CENTER]);
 
             $section->addText("Imputation budgetaire: Compte principale ");
             $section->addText("Bénéficiaire: ");
@@ -308,9 +306,9 @@ class PaiementController extends Controller
             
             
 
-            $calc_pl = ($paiement->montant) * ($pl / 100);
-            $calc_cf = ($paiement->montant) * ($cf / 100);
-            $calc_irf = ($paiement->montant) * ($irf / 100);
+            $calc_pl = ($paiement->montant) * $pl;
+            $calc_cf = ($paiement->montant) * $cf;
+            $calc_irf = ($paiement->montant) * $irf;
 
             $net = ($paiement->montant) - ($calc_pl + $calc_cf + $calc_irf);
 
@@ -320,6 +318,8 @@ class PaiementController extends Controller
             $section->addText("IRF: " .$calc_irf);
             $section->addText("NET: " .$net);
             $section->addText("La date: " . $paiement->date_paiement);
+            $section->addText("Le Directeur", ['align' => Jc::RIGHT]);
+            $section->addText("Le Comptable", ['align' => Jc::LEFT]);
 
             // Save the Word document
             $fileName = 'paiement_' . $paiement->id . '.docx';
@@ -338,18 +338,18 @@ class PaiementController extends Controller
             $section = $phpWord->addSection();
             
                 // Add content to the Word document
-            $section->addText("République Islamique de Mauritanie: " );
-            $section->addText("Honneur-Fraternité-Justice:");
-            $section->addText("MINISTERE DE L'ENSEIGNEMENT SUPERIEUR:");
-            $section->addText("ET DE LA RECHERCHE SCIENTIFIQUE:");
-            $section->addText("INSTITUT SUPERIEUR NUMERIQUE:");
-            $section->addText("Titre de paiement Numero:");
-
+            $section->addText("République Islamique de Mauritanie:", null, ['align' => Jc::LEFT]);
+            $section->addText("Honneur-Fraternité-Justice:", null, ['align' => Jc::LEFT]);
+            $section->addText("MINISTERE DE L'ENSEIGNEMENT SUPERIEUR:", null, ['align' => Jc::LEFT]);
+            $section->addText("ET DE LA RECHERCHE SCIENTIFIQUE:" , null, ['align' => Jc::LEFT]);
+            $section->addText("INSTITUT SUPERIEUR NUMERIQUE:" , null, ['align' => Jc::LEFT]);
+            $section->addText("Titre de paiement Numero:" , null, ['align' => Jc::CENTER]);
+    
             $section->addText("Imputation budgetaire: Compte principale ");
             $section->addText("Bénéficiaire: ");
             $section->addText("Montant: " . $paiement->montant);
             $section->addText("Montant en lettres: " . $this->convertirMontantEnLettres($paiement->montant));
-
+    
             $section->addText("Mode de Paiement: " . $paiement->mode_paiement);
             
             $section->addText("TVA: ");
@@ -361,6 +361,8 @@ class PaiementController extends Controller
             
                 
             $section->addText("La date: " . $paiement->date_paiement);
+            $section->addText("Le Directeur", ['align' => Jc::RIGHT]);
+            $section->addText("Le Comptable", ['align' => Jc::LEFT]);
 
             $fileName = 'paiement_' . $paiement->id . '.docx';
             $filePath = storage_path('app/public/' . $fileName);
